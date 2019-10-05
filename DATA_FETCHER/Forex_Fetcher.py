@@ -115,7 +115,7 @@ if __name__ == "__main__":
     saving_path = "../Data/"
     from UTILS import JSON_IO
     forex_loader = [GBP_USD(), GBP_CAD(), GBP_AUD(), GBP_EUR(), GBP_JPY(), GBP_CNY()]
-    for loader in forex_loader:
+    for loader in forex_loader[5:]:
         data = loader.Execute()
         file_name = loader.__class__.__name__
         JSON_IO.save_to_json(data, saving_path + file_name)

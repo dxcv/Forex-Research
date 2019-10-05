@@ -33,4 +33,4 @@ class load_from_json(object):
     def __init__(self, name):
         assert ".json" in name, " Please Correct File Name "
         with open(name, "r") as file:
-            data = file.read()
+            self.data = json.loads(file.read())
