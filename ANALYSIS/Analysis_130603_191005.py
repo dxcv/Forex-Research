@@ -60,9 +60,13 @@ class CVaR(VaR):
         print(self.CVaR_Param(0.01, self.mu, self.sigma))
 
     @classmethod
-    def CVaR_Param(cls, alpha, mu, sigma):
+    def CVaR_Normal(cls, alpha, mu, sigma):
         cvar = sp.stats.norm.pdf(sp.stats.norm.ppf(alpha)) * 1/alpha * sigma - mu
         return cvar
+
+    @classmethod
+    def CVaR_t_stats(cls, alpha, mu, sigma):
+
 
 
 if __name__ == "__main__":
