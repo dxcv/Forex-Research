@@ -52,6 +52,19 @@ class VaR(object):
         rets_sim = np.random.normal(mu, sigma, n_sims)
         return P * np.percentile(rets_sim, 100 - c)
 
+class CVaR(VaR):
+    def __init__(self, rets):
+        super().__init__(rets)
+        self.VaR = self.Calculate_VaR(1000, 99)
+
+        print(self.CVaR_Param(0.01, self.mu, self.sigma))
+
+    @classmethod
+    def CVaR_Param(cls, alpha, mu, sigma):
+        cvar = sp.stats.norm.pdf(sp.stats.norm.ppf(alpha)) * 1/alpha * sigma - mu
+        return cvar
+
+
 if __name__ == "__main__":
     import sys
     sys.path.insert(0, "../")
@@ -60,4 +73,5 @@ if __name__ == "__main__":
     df      = df.rename(columns = {"index": "Time"}).set_index("Time")
     df_rets = df.apply(lambda x: Calculate_Return(x)).dropna()
 
-    print(VaR(df_rets[["GBP_USD"]]).Calculate_VaR(1000, 99))
+    # print(VaR(df_rets[["GBP_USD"]]).Calculate_VaR(1000, 99))
+    print(CVaR(df_rets[["GBP_USD"]]))
