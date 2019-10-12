@@ -27,11 +27,12 @@ class VaR(object):
         self.mu           = None
         self.sigma        = None
 
-    def VaR_norm(self, alpha):
+    def VaR_norm(self, alpha, h):
         self.mu, self.sigma = norm.fit(self.rets)
-        VAR_param = self.VaR_Param(alpha, self.mu, self.sigma)
-        VAR_hist  = self.VaR_Hist(alpha, self.rets)
-        VAR_simu  = self.VaR_Simu(alpha, self.mu, self.sigma, self.__seed__, self.__n_sample__)
+        mu_h, sigma_h = self.mu * (h/len(self.rets)), self.sigma * ((h/len(self.rets)) ** 0.5)
+        VAR_param = self.VaR_Param(alpha, mu_h, sigma_h)
+        VAR_hist  = self.VaR_Hist(alpha, h, self.rets)
+        VAR_simu  = self.VaR_Simu(alpha, h, mu_h, sigma_h, self.__seed__, self.__n_sample__)
 
         VAR_table = pd.DataFrame({"Paremetric VAR": VAR_param,
                                   "Historical VAR": VAR_hist,
@@ -42,44 +43,48 @@ class VaR(object):
     def VaR_t(self, alpha, h):
         """ h is number of days """
         self.nu, self.mu, self.sigma = t.fit(self.rets)
-        VAR = self.VaR_t_stats(alpha, h, self.nu, self.mu, self.sigma)
-        VaR_table = pd.DataFrame({"VaR (t-statistics)": VAR}, index = {"Confidence {0:.1f}%".format(100-alpha*100)})
+        mu_h, sigma_h = self.mu * (h/len(self.rets)), self.sigma * ((h/len(self.rets)) ** 0.5)
+        VAR           = self.VaR_t_stats(alpha, h, self.nu, self.mu, sigma_h)
+        VaR_table     = pd.DataFrame({"VaR (t-statistics)": VAR}, index = {"Confidence {0:.1f}%".format(100-alpha*100)})
         return VaR_table
 
     @classmethod
     def VaR_Param(cls, alpha, mu, sigma):
-        return norm.ppf(1-alpha, mu, sigma)
+        return norm.ppf(1-alpha) * sigma - mu
 
     @classmethod
-    def VaR_Hist(cls, alpha, rets):
-        return -np.percentile(rets, alpha*100)
+    def VaR_Hist(cls, alpha, h, rets):
+        """ Estimation : VaR(h) = VaR(1) * sqrt(h) """
+        return -np.percentile(rets, alpha*100) * ((h/len(rets)) ** 0.5)
 
     @classmethod
-    def VaR_Simu(cls, alpha, mu, sigma, seed, n_sample):
-        np.random.seed(seed)
-        n_sims   = n_sample
-        rets_sim = np.random.normal(mu, n_sims, sigma)
-        return -np.percentile(rets_sim, alpha*100)
+    def VaR_Simu(cls, alpha, h, mu, sigma, seed, n_sample):
+        """ Generating n samples which has h days trading record """
+        sim_returns = np.random.normal(mu, sigma, (h, n_sample))
+
+        return -np.percentile(sim_returns, alpha * 100)
 
     @classmethod
-    def VaR_t_stats(cls, alpha, h, nu, sigma, mu):
-        return np.sqrt((nu-2)/nu) * t.ppf(1 - alpha, nu) * sigma - h*mu
+    def VaR_t_stats(cls, alpha, h, nu, mu, sigma):
+        return np.sqrt((nu-2)/nu) * t.ppf(1 - alpha, nu) * sigma - mu
 
 class CVaR(VaR):
     def __init__(self, rets):
         super().__init__(rets)
 
-    def CVaR_norm(self, alpha):
+    def CVaR_norm(self, alpha, h):
         self.mu, self.sigma = norm.fit(self.rets)
-        CVAR = self.CVaR_Normal(alpha, self.mu, self.sigma)
-        return pd.DataFrame({"CVaR (t-statistics)": CVAR}, index = {"Confidence {0:.1f}%".format(100-alpha*100)})
+        mu_h, sigma_h = self.mu * (h/len(self.rets)), self.sigma * ((h/len(self.rets)) ** 0.5)
+        CVAR = self.CVaR_Normal(alpha, mu_h, sigma_h)
+        return pd.DataFrame({"CVaR (Normal)": CVAR}, index = {"Confidence {0:.1f}%".format(100-alpha*100)})
 
     def CVaR_t(self, alpha, h):
         """ h is number of days """
         self.nu, self.mu, self.sigma = t.fit(self.rets)
+        mu_h, sigma_h = self.mu * (h/len(self.rets)), self.sigma * ((h/len(self.rets)) ** 0.5)
         self.nu = np.round(self.nu)
         xanu    = t.ppf(alpha, self.nu)
-        CVAR    = self.CVaR_t_stats(alpha, 1, self.nu, xanu, self.mu, self.sigma)
+        CVAR    = self.CVaR_t_stats(alpha, 1, self.nu, xanu, mu_h, sigma_h)
         return pd.DataFrame({"CVaR (t-statistics)": CVAR}, index = {"Confidence {0:.1f}%".format(100-alpha*100)})
 
     @classmethod
@@ -100,7 +105,7 @@ if __name__ == "__main__":
     df      = df.rename(columns = {"index": "Time"}).set_index("Time")
     df_rets = df.apply(lambda x: Calculate_Return(x)).dropna()
 
-    # print(VaR(df_rets[["GBP_USD"]]).VaR_norm(0.01))
-    print(VaR(df_rets[["GBP_USD"]]).VaR_t(0.01, 1))
-    print(CVaR(df_rets[["GBP_USD"]]).CVaR_norm(0.01))
-    print(CVaR(df_rets[["GBP_USD"]]).CVaR_t(0.01, 1))
+    print(VaR(df_rets[["GBP_USD"]]).VaR_norm(0.01, 20))
+    print(VaR(df_rets[["GBP_USD"]]).VaR_t(0.01, 20))
+    print(CVaR(df_rets[["GBP_USD"]]).CVaR_norm(0.01, 20))
+    print(CVaR(df_rets[["GBP_USD"]]).CVaR_t(0.01, 20))
