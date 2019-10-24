@@ -15,7 +15,7 @@ if __name__ == "__main__":
     df      = df.rename(columns = {"index": "Time"}).set_index("Time")
     df_rets = cal_returns(None).multi_rets(df)
 
-    print(GP(df_rets, 3, 10))
+    print(GP(df_rets, 3, 10).Generator())
 
     # print(VaR(df_rets[["GBP_USD"]]).VaR_norm(0.01, 20))
     # print(VaR(df_rets[["GBP_USD"]]).VaR_t(0.01, 20))
