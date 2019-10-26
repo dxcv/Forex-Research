@@ -20,26 +20,31 @@ class VaR(object):
         self.mu           = None
         self.sigma        = None
 
-    def VaR_norm(self, alpha, h):
+    def VaR_norm(self, alpha, h, verbose):
         self.mu, self.sigma = norm.fit(self.rets)
         mu_h, sigma_h = self.mu * (h/len(self.rets)), self.sigma * ((h/len(self.rets)) ** 0.5)
-        VAR_param = self.VaR_Param(alpha, mu_h, sigma_h)
-        VAR_hist  = self.VaR_Hist(alpha, h, self.rets)
-        VAR_simu  = self.VaR_Simu(alpha, h, mu_h, sigma_h, self.__seed__, self.__n_sample__)
+        if verbose:
+            VAR_param = self.VaR_Param(alpha, mu_h, sigma_h)
+            VAR_hist  = self.VaR_Hist(alpha, h, self.rets)
+            VAR_simu  = self.VaR_Simu(alpha, h, mu_h, sigma_h, self.__seed__, self.__n_sample__)
 
-        VAR_table = pd.DataFrame({"Paremetric VAR": VAR_param,
-                                  "Historical VAR": VAR_hist,
-                                  "Simulated VAR": VAR_simu}, index = {"Confidence {0:.1f}%".format(100-alpha*100)})
+            VAR_table = pd.DataFrame({"Paremetric VAR": VAR_param,
+                                      "Historical VAR": VAR_hist,
+                                      "Simulated VAR": VAR_simu}, index = {"Confidence {0:.1f}%".format(100-alpha*100)})
 
-        return VAR_table
+            return VAR_table
+        else:
+            return self.VaR_Param(alpha, mu_h, sigma_h)
 
-    def VaR_t(self, alpha, h):
+    def VaR_t(self, alpha, h, verbose):
         """ h is number of days """
         self.nu, self.mu, self.sigma = t.fit(self.rets)
         mu_h, sigma_h = self.mu * (h/len(self.rets)), self.sigma * ((h/len(self.rets)) ** 0.5)
         VAR           = self.VaR_t_stats(alpha, h, self.nu, self.mu, sigma_h)
-        VaR_table     = pd.DataFrame({"VaR (t-statistics)": VAR}, index = {"Confidence {0:.1f}%".format(100-alpha*100)})
-        return VaR_table
+        if verbose:
+            return pd.DataFrame({"VaR (t-statistics)": VAR}, index = {"Confidence {0:.1f}%".format(100-alpha*100)})
+        else:
+            return VAR
 
     @classmethod
     def VaR_Param(cls, alpha, mu, sigma):
