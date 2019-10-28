@@ -13,7 +13,7 @@ class Generating_Portfolio(object):
         self.__n_portfolio__ = 25000
         self.__time_length__ = 252        # Trading Days in ONE YEAR
 
-    def Generator(self):
+    def Random_Generator(self):
         results = np.zeros((3, self.__n_portfolio__))
         weights_record = []
         for i in range(self.__n_portfolio__):
