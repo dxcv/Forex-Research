@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 import pandas as pd
 import scipy.optimize as sco
+from scipy.stats import norm
 
 from STATS.Risk import VaR, CVaR
 
@@ -73,15 +74,19 @@ class Value_at_Risk_Optimizer(Parameters):
 
     @staticmethod
     def Cal_VaR(weights, alpha, time_length, all_rets):
-        res = VaR(np.dot(all_rets, weights)).VaR_t(alpha, time_length, False)
+        # res = VaR(np.dot(all_rets, weights)).VaR_norm(alpha, time_length, False)
+        # print(res)
+        mu, sigma = norm.fit(all_rets)
+        mu_h, sigma_h = mu * (time_length/len(all_rets)), sigma * ((time_length/len(all_rets)) ** 0.5)
 
-        return res
+        return norm.ppf(1-alpha) * sigma_h - mu_h
 
     @classmethod
     def Minimize_VaR(cls, n_asset, alpha, time_length, all_rets):
+        # result = cls.Cal_VaR(np.random.random(6), alpha, time_length, all_rets)
         args    = (alpha, time_length, all_rets)
         cons    = ({"type": "eq", "fun": lambda x: np.sum(x) - 1})
-        bounds  = tuple((0.0, 1.0) for asset in range(n_asset))
+        bounds  = tuple((0.0000, 1.0000) for asset in range(n_asset))
         result  = sco.minimize(cls.Cal_VaR, n_asset * [1./n_asset,], args = args, method = "SLSQP", bounds = bounds, constraints = cons)
 
         return result

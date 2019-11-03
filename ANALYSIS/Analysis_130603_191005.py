@@ -15,7 +15,7 @@ if __name__ == "__main__":
     df      = df.reindex(index = df.index[::-1])
     df      = df.rename(columns = {"index": "Time"}).set_index("Time")
     df_rets = cal_returns(None).multi_rets(df)
-    print(df_rets)
+
     # print(GP(df_rets, 3, 10).Generator())
     print(VaR_OPT(6, 100, df_rets).Execute_Optimization())
 
