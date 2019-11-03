@@ -28,11 +28,17 @@ class Generating_Portfolio(object):
         return results, weights_record
 
     @staticmethod
-    def Portfolio(weights, all_rets, mean_rets, cov_mat, time_length):
+    def RET_STD(weights, mean_rets, cov_mat):
+        rets = np.sum(mean_rets * weights) * time_length
+        std  = np.sqrt(np.dot(weights.T, np.dot(cov_mat, weights))) * np.sqrt(time_lengt)
+
+        return rets, std
+
+    @staticmethod
+    def RET_STD_VaR(weights, all_rets, mean_rets, cov_mat, time_length):
         """ All variable here is in numpy format """
         rets = np.sum(mean_rets * weights) * time_length
         std  = np.sqrt(np.dot(weights.T, np.dot(cov_mat, weights))) * np.sqrt(time_length)
-        weighted_rets = np.dot(all_rets, weights)
-        risk = VaR(weighted_rets).VaR_t(0.01, time_length, False)
+        risk = VaR(np.dot(all_rets, weights)).VaR_t(0.01, time_length, False)
 
         return rets, std, risk

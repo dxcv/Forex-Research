@@ -8,14 +8,16 @@ if __name__ == "__main__":
     import sys
     sys.path.insert(0, "../")
     from STATS.Basic import cal_returns
-    from STATS.Risk import VaR, CVaR
-    from STATS.Portfolio import Generating_Portfolio as GP
+    # from STATS.Risk import VaR, CVaR
+    # from STATS.Portfolio import Generating_Portfolio as GP
+    from STATS.Optimizer import Value_at_Risk_Optimizer as VaR_OPT
     df      = pd.read_csv("../Data/Forex_130603_191005.csv")
     df      = df.reindex(index = df.index[::-1])
     df      = df.rename(columns = {"index": "Time"}).set_index("Time")
     df_rets = cal_returns(None).multi_rets(df)
-
-    print(GP(df_rets, 3, 10).Generator())
+    print(df_rets)
+    # print(GP(df_rets, 3, 10).Generator())
+    print(VaR_OPT(6, 100, df_rets).Execute_Optimization())
 
     # print(VaR(df_rets[["GBP_USD"]]).VaR_norm(0.01, 20))
     # print(VaR(df_rets[["GBP_USD"]]).VaR_t(0.01, 20))
